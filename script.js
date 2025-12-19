@@ -37,7 +37,7 @@ const questionsElement = document.getElementById("questions");
 const submitButton = document.getElementById("submit");
 const scoreElement = document.getElementById("score");
 
-// Load saved progress from sessionStorage
+// Load progress
 let userAnswers = JSON.parse(sessionStorage.getItem("progress")) || {};
 
 // Render questions
@@ -54,15 +54,22 @@ function renderQuestions() {
       radio.name = `question-${i}`;
       radio.value = choice;
 
-      // Restore checked state
+      // Restore checked attribute (IMPORTANT for Cypress)
       if (userAnswers[i] === choice) {
-        radio.checked = true;
+        radio.setAttribute("checked", "true");
       }
 
-      // Save progress on change
-      radio.addEventListener("change", () => {
+      radio.addEventListener("click", () => {
         userAnswers[i] = choice;
         sessionStorage.setItem("progress", JSON.stringify(userAnswers));
+
+        // Remove checked attribute from siblings
+        document
+          .querySelectorAll(`input[name="question-${i}"]`)
+          .forEach(r => r.removeAttribute("checked"));
+
+        // Set checked attribute on selected radio
+        radio.setAttribute("checked", "true");
       });
 
       questionDiv.appendChild(radio);
@@ -84,14 +91,15 @@ submitButton.addEventListener("click", () => {
   });
 
   scoreElement.textContent = `Your score is ${score} out of 5.`;
-  localStorage.setItem("score", score);
+  localStorage.setItem("score", String(score));
 });
 
-// Show previous score if exists
+// Show stored score after refresh
 const savedScore = localStorage.getItem("score");
 if (savedScore !== null) {
   scoreElement.textContent = `Your score is ${savedScore} out of 5.`;
 }
 
 renderQuestions();
+
 
