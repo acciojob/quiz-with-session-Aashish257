@@ -31,26 +31,67 @@ const questions = [
 ];
 
 // Display the quiz questions and choices
+// your JS code here
+
+const questionsElement = document.getElementById("questions");
+const submitButton = document.getElementById("submit");
+const scoreElement = document.getElementById("score");
+
+// Load saved progress from sessionStorage
+let userAnswers = JSON.parse(sessionStorage.getItem("progress")) || {};
+
+// Render questions
 function renderQuestions() {
-  for (let i = 0; i < questions.length; i++) {
-    const question = questions[i];
-    const questionElement = document.createElement("div");
-    const questionText = document.createTextNode(question.question);
-    questionElement.appendChild(questionText);
-    for (let j = 0; j < question.choices.length; j++) {
-      const choice = question.choices[j];
-      const choiceElement = document.createElement("input");
-      choiceElement.setAttribute("type", "radio");
-      choiceElement.setAttribute("name", `question-${i}`);
-      choiceElement.setAttribute("value", choice);
+  questionsElement.innerHTML = "";
+
+  questions.forEach((q, i) => {
+    const questionDiv = document.createElement("div");
+    questionDiv.textContent = q.question;
+
+    q.choices.forEach(choice => {
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = `question-${i}`;
+      radio.value = choice;
+
+      // Restore checked state
       if (userAnswers[i] === choice) {
-        choiceElement.setAttribute("checked", true);
+        radio.checked = true;
       }
-      const choiceText = document.createTextNode(choice);
-      questionElement.appendChild(choiceElement);
-      questionElement.appendChild(choiceText);
-    }
-    questionsElement.appendChild(questionElement);
-  }
+
+      // Save progress on change
+      radio.addEventListener("change", () => {
+        userAnswers[i] = choice;
+        sessionStorage.setItem("progress", JSON.stringify(userAnswers));
+      });
+
+      questionDiv.appendChild(radio);
+      questionDiv.appendChild(document.createTextNode(choice));
+    });
+
+    questionsElement.appendChild(questionDiv);
+  });
 }
+
+// Submit quiz
+submitButton.addEventListener("click", () => {
+  let score = 0;
+
+  questions.forEach((q, i) => {
+    if (userAnswers[i] === q.answer) {
+      score++;
+    }
+  });
+
+  scoreElement.textContent = `Your score is ${score} out of 5.`;
+  localStorage.setItem("score", score);
+});
+
+// Show previous score if exists
+const savedScore = localStorage.getItem("score");
+if (savedScore !== null) {
+  scoreElement.textContent = `Your score is ${savedScore} out of 5.`;
+}
+
 renderQuestions();
+
